@@ -1,0 +1,238 @@
+---
+title: "FastqPlotR Vignette"
+author: "Jake Sauter"
+date: "2/19/2021"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{FastqPlotR Vignette}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, 
+                      message = FALSE, 
+                      error = FALSE)
+```
+
+Welcome to `FastQCPlotR`! The heart of this package is the 
+`reading_in(file,test)` utility that we will soon review, however
+at a high level this function can aid the user for reading in 
+the results of their `FastQC` runs over NGS data, as well 
+as **plotting** this data!
+
+Before we continue, we will have to import a few packages that this
+vignette relies on.
+
+```{r}
+library(FastQCPlotR)
+library(magrittr)
+library(ggplot2)
+library(dplyr)
+library(knitr)
+```
+
+## **Function: reading_in(file, test)**
+
+The heart of the `FastQCPlotR` package is the `reading_in` function. This
+function takes as arguments: 
+
+### **Arguments**
+```{r}
+args(reading_in)
+```
+
+* `file`: The `FastQC` output file to read in. This file is usually named
+   `fastqc_data.txt` in the output directory of your `FastQC` run.
+* `test`: The test results data to read from the `FastQC` results file.
+ By default this is "Per base sequence quality", however the user can pass 
+ any valid `FastQC` section identifier.
+* `sample_name`: (optional) A name to give the sample, this name will be appended
+   as a new column to every row.
+
+We can see the function in action, and observe a few resultant 
+rows of output below.
+
+```{r}
+fastqc_data_file <- 
+   system.file('extdata', 
+            '/fastqc_files/ERR458493_fastqc_data.txt', 
+            package = "FastQCPlotR")
+
+reading_in(fastqc_data_file) %>% 
+   head() %>% 
+   kable()
+```
+
+Now that we have seen this function in action, we can review how
+exactly it works. First, lets take a look at the body of the function.
+
+### **Body**
+
+```{r}
+body(reading_in)
+```
+
+We can see above that the `reading_in()` command makes use of
+a `Unix` system command making using of `sed`. In order to
+fully understand what the `reading_in()` function is doing, 
+we will explain the use of `sed` in this context. 
+
+Given the functions arguments of `test` and `file`, the function
+forms a command that will look similar to below for the following
+inputs: 
+
+```{r}
+test = "Per base sequence quality"
+file = '/home/x1/Documents/Weill_Cornell/ANGSD/homework/FastQCPlotR/data/ERR458497_fastqc/fastqc_data.txt'
+
+paste0("sed -n '/", test, "/,/END_MODULE/p' ", 
+        file, " | grep -v '^>>'")
+```
+
+About the `sed` command: 
+
+   * `sed` -- stream editor
+   * `-n` -- silent option
+
+In this case, `sed` is being used to extract the "Per base sequence quality" section
+from the `fastqc_data.txt` file. From the `sed` manual page, we can find that 
+the `p` option tells `sed` to **Print the current pattern space**. Thus this command
+returns the whole matching subsection of the `FastQC` results file that we are 
+interested in.
+
+From section 5.1 of the `sed` manual, accessed through the `info sed` command, 
+
+```{bash, eval=FALSE}
+5.1 Overview of regular expression in 'sed'
+===========================================
+
+To know how to use 'sed', people should understand regular expressions
+("regexp" for short).  A regular expression is a pattern that is matched
+against a subject string from left to right.  Most characters are
+"ordinary": they stand for themselves in a pattern, and match the
+corresponding characters.  Regular expressions in 'sed' are specified
+between two slashes.
+
+   The following command prints lines containing the word 'hello':
+
+     sed -n '/hello/p'
+
+   The above example is equivalent to this 'grep' command:
+
+     grep 'hello'
+```
+
+
+More specifically, this command uses `regular expressions` contained within `/.../` forward
+slashes to dictate to `sed` the starting and ending patterns, followed
+by `p` telling `sed` to print all of the lines in this section. This
+function in particular uses a variable that allows for parsing 
+the file to isolate different sections, with each section 
+always ending with `END_MODULE`.
+
+### **Use Case**
+
+We will now use the `reading_in` function to read in the FastQC results of at 4 fastq files (2 biological replicates and 2 technical replicates each). We will make use of the `sample_name` argument to `reading_in` to keep track of the sample name in the new R objects we are creating.
+
+First we will select the files from the `sample_mapping.tsv` file included 
+in the package to simulate a real NGS workflow. We will load in this 
+runs accession table and filter for only those samples that we are 
+interested in. For this use case, we will be using `WT_1` and `WT_2` 
+**biological replicates**, as well as the **technical replicates** sequenced
+in both lanes 1 and 2 for both biological replicates.
+
+```{r}
+samp_map_file <- system.file("extdata", 'sample_mapping.tsv', package="FastQCPlotR")
+
+sample_mapping <- read.csv(samp_map_file, sep = '\t') 
+
+samples <- sample_mapping[sample_mapping$Sample == "WT" &
+               sample_mapping$Lane %in% c(1,2) &
+               sample_mapping$BiolRep %in% c(1,2), ]
+
+samples %>% kable()
+```
+
+Now that we have isolated our samples of interest, we can access the
+`FastQC` files associated with them. For this case we have included 
+some raw data in the package for instructional purposes, though this
+is where the user **should locate their own FastQC files on their 
+file system**.
+
+```{r}
+run_accs <- samples$RunAccession
+
+fastqc_files <-
+   system.file("extdata", 
+      paste0('fastqc_files/', run_accs, '_fastqc_data.txt'),
+       package="FastQCPlotR")
+
+names(fastqc_files) <- samples$RunAccession
+
+fastqc_files %>% 
+   as.data.frame() %>% 
+   t() %>% 
+   kable()
+```
+
+With these file paths, we can now make use to the `reading_in` function. 
+Below, we: 
+
+   * Pre-allocate a list for the results for each of the files of interest
+   * Read in the `FastQC` results of interest with `reading_in`
+   * Bind these data frames with `dplyr::bind_rows`
+
+
+```{r}
+fastqc_results <- vector('list', length(fastqc_files))
+names(fastqc_results) <- names(fastqc_files)
+
+for (sample_name in names(fastqc_files)) {
+   fastqc_results[[sample_name]] <- 
+      reading_in(file = fastqc_files,
+                 sample_name = sample_name)
+}
+
+df <- fastqc_results %>% 
+   bind_rows() 
+
+df %>% 
+   head() %>% 
+   kable()
+```
+
+### **Plotting `FastQC` Results**
+
+We can use the function `FastQCPlotR::plot_per_base_seq_qual`
+
+
+```{r}
+body(plot_per_base_seq_qual)
+```
+
+We can see that this function is just a helpful wrapper around 
+`ggplot2::geom_point` and `ggplot2::facet_wrap` for plotting this
+sort of data.
+
+```{r}
+sample_groups <- paste0(samples$Sample, '_', samples$BiolRep)
+names(sample_groups) <- samples$RunAccession
+
+fastqc_plotr_sample_df <- df %>%
+   mutate(sample_group = sample_groups[sample_name])
+
+# usethis::use_data(fastqc_plotr_sample_df)
+
+fastqc_plotr_sample_df %>% 
+   plot_per_base_seq_qual()
+```
+
+For comparison, we can see the data accompanying the package 
+will produce the same plot. 
+
+
+```{r}
+FastQCPlotR::fastqc_plotr_sample_df %>% 
+   plot_per_base_seq_qual()
+```

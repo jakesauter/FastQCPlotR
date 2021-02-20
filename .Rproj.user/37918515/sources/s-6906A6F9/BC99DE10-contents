@@ -1,0 +1,115 @@
+---
+title: "Building an R Package"
+author: "Jake Sauter"
+date: "2/20/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## **Setting up a package**
+
+Setting up a package is easy with the help of [**RStudio**](https://rstudio.com/)! When creating a 
+"New Project" in the usual RStudio workflow, simply select **R Package** instead of **New Project**!
+
+![](imgs/create_r_project.png)
+
+## **Integrating a Function into a Package**
+
+For this specific package (`FastQCPlotR`), we will first be integrating
+the function `reading_in`, which can read in a sub-section of an 
+analysis txt file produced by the `FastQC` program usually named
+`fastqc_data.txt`.
+
+In order to integrate this function into the package, we first 
+create a new file under the `R/` directory in the package stucture
+and create a new file named `reading_in.R`. In this file, 
+we implement the following function and accompanying documentation
+below. 
+
+```{r, eval=FALSE}
+#' Function for parsing the text output of FastQC
+#'
+#' This functions extracts the values for a specific test run by FastQC on a
+#' single fastq file.
+#'
+#' @param file string that specifies the path to an individual FastQC result file
+#' (tyically named "fastqc_data.txt"
+#' @param test Indicate which test results should be extracted. Default:
+#' "Per base sequence quality". Other options are, for example, "Per tile sequence quality",
+#' "Per sequence quality score" etc.
+#'
+#' @return data.frame with the values of a single FastQC test result.
+#'
+#' @examples \dontrun{
+#' res <- reading_in(file = "acinar-3_S9_L001_R1_001_fastqc/fastqc_data.txt")
+#' }
+reading_in <- function(file, test = "Per base sequence quality"){
+
+    ## generate the string that will be used for the file parsing
+    syscommand <- paste0("sed -n '/", test, "/,/END_MODULE/p' ", file, " | grep -v '^>>'")
+    
+    ## use the fread command, which can interpret UNIX commands on the fly to
+    ## read in the correct portion of the FastQC result
+    dat <- data.table::fread( cmd = syscommand, header = TRUE) %>% as.data.frame
+    return(dat)
+}
+```
+
+After this source is integrated into the `R/reading_in.R` file, we
+can modify the documentation so that the function is **exported**
+and available to the package end user by adding the `@export` tag, 
+as well as include the necessary `@importFrom` statements so 
+that the package is sure to have the packages it relies on after
+being downloaded.
+
+After we have done all this, we are all set to 
+**build the documentation** with `devtools::document()`, followed
+by **loading the package** (simulating and install on our system) with `devtools::load_all()`.
+
+## **Saving Package-Associated Data**
+
+The vignette of any package is a very important manual / example
+of how the package can be used to improve the user's workflow. For
+this reason, it is vital that the user can have quick access to data
+to play with and gain intuition about the package. 
+
+With this importance in mind, `FastQCPlotR` has included 
+`FastQC` generated `txt` files in the `inst/extdata` folder
+to be exported along with the package. These files are made
+of use through the vignette through commands line the one below.
+
+```{r}
+samp_map_file <- system.file("extdata", 'sample_mapping.tsv', package="FastQCPlotR")
+
+sample_mapping <- read.csv(samp_map_file, sep = '\t') 
+```
+
+This should work on any user's system once they have installed
+the package and show the user how the `reading_in` command
+can be used to wrangle their `FastQC` analysis results. 
+
+The package also **exports** the  `fastqc_plotr_sample_df` R
+data object, generated from the same process shown in the 
+package vignette. This data.frame was exported with 
+`usethis::use_data(fastqc_plotr_sample_df)`, which assists
+package development by automatically placing the saved `.Rd` file
+under the `data/` directory, which is then made available to the
+end user upon package installation. 
+
+Finally, in order to **export** and **document** the 
+`fastqc_plotr_sample_df` R data object, the object 
+must be included in a source file (I have chosen to 
+use `data.R`) along with `roxygen2` documentation 
+structure and the `@export` tag.
+
+## **How to Build the Package**
+
+In order to **build** the package, we 
+can make use of `devtools::build()`, which "**converts a package source directory into a single bundled file**. If binary = FALSE this creates a tar.gz package that can be installed on any platform, provided they have a full development environment (although packages without source code can typically be installed out of the box). If binary = TRUE, the package will have a platform specific extension (e.g. .zip for windows), and will only be installable on the current platform, but no development environment is needed."
+
+To install from this `tar.gz` file, we can use `devtools::install()`, passing the `tar.gz` file as the first argument.
+
+During development, a full install was tested with `devtools::install`, with the vignette being able to generate from a fresh install with no reference to the development version of the package.

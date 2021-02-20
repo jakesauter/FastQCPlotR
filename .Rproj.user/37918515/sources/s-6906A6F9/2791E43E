@@ -1,0 +1,23 @@
+{
+    "id": "2791E43E",
+    "path": "~/Documents/Weill_Cornell/ANGSD/homework/FastQCPlotR/R/plot_per_base_seq_qual.R",
+    "project_path": "R/plot_per_base_seq_qual.R",
+    "type": "r_source",
+    "hash": "602614191",
+    "contents": "",
+    "dirty": false,
+    "created": 1613850736303.0,
+    "source_on_save": false,
+    "relative_order": 3,
+    "properties": {
+        "tempName": "Untitled1"
+    },
+    "folds": "",
+    "lastKnownWriteTime": 1613853314,
+    "encoding": "UTF-8",
+    "collab_server": "",
+    "source_window": "",
+    "last_content_update": 1613853314081,
+    "read_only": false,
+    "read_only_alternatives": []
+}
