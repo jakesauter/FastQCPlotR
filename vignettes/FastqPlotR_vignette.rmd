@@ -2,11 +2,9 @@
 title: "FastqPlotR Vignette"
 author: "Jake Sauter"
 date: "2/19/2021"
-output: rmarkdown::html_vignette
-vignette: >
-  %\VignetteIndexEntry{FastqPlotR Vignette}
-  %\VignetteEngine{knitr::rmarkdown}
-  %\VignetteEncoding{UTF-8}
+output: 
+   html_document:
+      keep_md: true
 ---
 
 ```{r setup, include=FALSE}
