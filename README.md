@@ -318,7 +318,7 @@ fastqc_plotr_sample_df %>%
    plot_per_base_seq_qual()
 ```
 
-![](/tmp/RtmpHXgJdN/preview-78c23d2cd447.dir/FastqPlotR_vignette_files/figure-html/unnamed-chunk-11-1.png)<!-- -->
+![](FastqPlotR_vignette_files/figure-html/unnamed-chunk-11-1.png)
 
 For comparison, we can see the data accompanying the package 
 will produce the same plot. 
@@ -330,4 +330,4 @@ FastQCPlotR::fastqc_plotr_sample_df %>%
    plot_per_base_seq_qual()
 ```
 
-![](/tmp/RtmpHXgJdN/preview-78c23d2cd447.dir/FastqPlotR_vignette_files/figure-html/unnamed-chunk-12-1.png)<!-- -->
+![](FastqPlotR_vignette_files/figure-html/unnamed-chunk-12-1.png)
