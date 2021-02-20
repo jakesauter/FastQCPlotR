@@ -2,8 +2,9 @@
 
 ## **Install Instructions**
 
+```{r, eval=FALSE}
 install.packages('https://github.com/jakesauter/FastQCPlotR/blob/main/FastQCPlotR_0.1.0.tar.gz?raw=true', type='source', repos=NULL)
-
+```
 ## **Introduction and Dependencies**
 
 Welcome to `FastQCPlotR`! The heart of this package is the 
