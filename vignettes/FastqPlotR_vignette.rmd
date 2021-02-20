@@ -215,7 +215,7 @@ We can see that this function is just a helpful wrapper around
 `ggplot2::geom_point` and `ggplot2::facet_wrap` for plotting this
 sort of data.
 
-```{r}
+```{r, fig.width=7}
 sample_groups <- paste0(samples$Sample, '_', samples$BiolRep)
 names(sample_groups) <- samples$RunAccession
 
@@ -232,7 +232,7 @@ For comparison, we can see the data accompanying the package
 will produce the same plot. 
 
 
-```{r}
+```{r, fig.width=7}
 FastQCPlotR::fastqc_plotr_sample_df %>% 
    plot_per_base_seq_qual()
 ```
