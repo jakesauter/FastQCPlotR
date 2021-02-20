@@ -1,13 +1,10 @@
----
-title: "FastqPlotR Vignette"
-author: "Jake Sauter"
-date: "2/19/2021"
-output: 
-   html_document:
-      keep_md: true
----
+# **FastQCPlotR**
 
+## **Install Instructions**
 
+install.packages('https://github.com/jakesauter/FastQCPlotR/blob/main/FastQCPlotR_0.1.0.tar.gz?raw=true', type='source', repos=NULL)
+
+## **Introduction and Dependencies**
 
 Welcome to `FastQCPlotR`! The heart of this package is the 
 `reading_in(file,test)` utility that we will soon review, however
