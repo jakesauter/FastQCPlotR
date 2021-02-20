@@ -15,5 +15,7 @@
 #'   \item{sample_name}{Run accession number given to "sample_name" argument of reading_in.}
 #'   \item{sample_group}{Sample group identifier used to plot data.}
 #' }
+#'
+#' @export
 "fastqc_plotr_sample_df"
 

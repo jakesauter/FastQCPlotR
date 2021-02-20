@@ -1,8 +1,12 @@
 ---
 title: "Building an R Package"
 author: "Jake Sauter"
-date: "2/20/2021"
-output: html_document
+date: "2/19/2021"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Building an R Package}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
 ---
 
 ```{r setup, include=FALSE}
@@ -105,6 +109,34 @@ must be included in a source file (I have chosen to
 use `data.R`) along with `roxygen2` documentation 
 structure and the `@export` tag.
 
+## **Vignette**
+
+In order to view the vignettes of this package, you must make sure
+to specify `build_vignettes = TRUE` to `devtools::install`, then 
+you can browse the vignettes with the following command:
+
+```{r, eval=FALSE}
+browseVignettes(package='FastQCPlotR')
+```
+
+In order to have this vignette setup, the `.Rmd` 
+file must be in the `vignettes/` directory
+of the project and have special vignette headers: 
+
+```{r, eval=FALSE}
+---
+title: "FastqPlotR Vignette"
+author: "Jake Sauter"
+date: "2/19/2021"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{FastqPlotR Vignette}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+```
+
+
 ## **How to Build the Package**
 
 In order to **build** the package, we 
@@ -113,3 +145,11 @@ can make use of `devtools::build()`, which "**converts a package source director
 To install from this `tar.gz` file, we can use `devtools::install()`, passing the `tar.gz` file as the first argument.
 
 During development, a full install was tested with `devtools::install`, with the vignette being able to generate from a fresh install with no reference to the development version of the package.
+
+## **Installing the Tarball**
+
+```{r}
+install.packages('FastQCPlotR_0.1.0.tar.gz', repos=NULL, type = 'source')
+```
+
+
